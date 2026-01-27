@@ -68,12 +68,12 @@
 
     The derivative equals to zero when
 
-    1. $\hat{\mathbf y} = \mathbf y$ (impossible due to softmax), or
+    1. $\hat{\mathbf y} = \mathbf y$ (impossible due to positive nature of softmax), or
 
     2. $\hat{\mathbf y} - \mathbf y \in \ker\left(\mathbf U\right)$ (possible since $d$ is usually much less than $|\mathrm{Vocab}|$).
 
     Assume vector $\mathbf v_c$ is randomly initialized and $\mathbf U$ remains fixed, 
-    gradient descent updates $\mathbf v_c$ by pulling it towards the true context vector $\mathbf U\mathbf y$ and repelling it from the predicted expectation $\mathbf U\hat{\mathbf y}$.
+    then gradient descent updates $\mathbf v_c$ by pulling it towards the true context vector $\mathbf U\mathbf y$ and repelling it from the (false) predicted distribution $\mathbf U\hat{\mathbf y}$.
 \end{enumerate}
 
 \end{document}
