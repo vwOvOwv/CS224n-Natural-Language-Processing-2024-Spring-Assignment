@@ -1,0 +1,79 @@
+\documentclass[11pt, a4paper, oneside]{article}
+\usepackage{amsmath, amsthm, amssymb, bm, color, framed, graphicx, hyperref, mathrsfs}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{lastpage}
+\usepackage{booktabs}
+\usepackage[raggedright]{titlesec}
+\titleformat{\section}
+  {\normalfont\bfseries}
+  {\thesection}
+  {1em}
+  {}
+
+\geometry{a4paper, left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+
+\setlength{\parindent}{0pt}
+
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyhead[L]{Assignment \#2}
+    \fancyhead[R]{CS224n Natural Language Processing}
+    \fancyfoot[C]{\thepage}
+}
+
+\pagestyle{plain}
+
+\title{\textbf{Assignment \#2}}
+\author{Peiyu Liu}
+\date{\empty}
+
+\begin{document}
+
+\maketitle
+\section{[15 points] Understanding word2vec.}
+\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
+    \item 
+    According to notations defined in writeup:
+    $$\mathbf J_{\mathrm{naive-softmax}}(\mathbf v_c,o,\mathbf U)=-\log P(O=o|C=c)
+    = -\log \hat y_o=-\sum_{w\in \mathrm{Vocab}}y_w\log\hat y_w.$$
+    Note that
+
+    1. scalar $\hat y_o = P(O=o|C=c)=\frac{\exp\left(\mathbf u_o^T\mathbf v_c\right)}{\sum_{w\in\mathrm{Vocab}}\exp\left(\mathbf u_w^T\mathbf v_c\right)}$, and
+
+    2. $\mathbf y$ is an one-hot vector where only $y_o=1$.
+    \qed
+
+    \item 
+    Using chain rule, we obtain
+    \begin{align*}
+        \frac{\partial \mathbf J}{\partial \mathbf v_c}&=-\frac{\partial}{\partial \mathbf v_c}\log P(O=o|C=c)\\
+        &=-\frac{1}{P(O=o|C=c)}\cdot\frac{\partial P(O=o|C=c)}{\partial \mathbf v_c}\\
+        &=-\frac{\sum_{w\in\mathrm{Vocab}}\exp\left(\mathbf u_w^T\mathbf v_c\right)}{\exp\left(\mathbf u_o^T\mathbf v_c\right)}\\
+        &\cdot \frac{\exp\left(\mathbf u_o^T\mathbf v_c\right)\left[\mathbf u_o\sum_{w\in{\mathrm{Vocab}}}\exp\left(\mathbf u_w^Tv_c\right)-\sum_{w\in{\mathrm{Vocab}}}\mathbf u_w\exp\left(\mathbf u_w^T\mathbf v_c\right)\right]}
+        {\left[\sum_{w\in\mathrm{Vocab}}\exp\left(\mathbf u_w^T\mathbf v_c\right)\right]^2}\\
+        &=\frac{\sum_{w\in\mathrm{Vocab}}\mathbf u_w\exp\left(\mathbf u_w^T\mathbf v_c\right)}{\sum_{w\in\mathrm{Vocab}}\exp\left(\mathbf u_w^T\mathbf v_c\right)} - \mathbf u_o.\\
+    \end{align*}
+    Since $\mathbf U = \left[\mathbf u_1, \mathbf u_2, \dots, \mathbf u_{|\mathrm{Vocab}|}\right]$, we have
+    \begin{align*}
+        \frac{\sum_{w\in\mathrm{Vocab}}\mathbf u_w\exp\left(\mathbf u_w^T\mathbf v_c\right)}{\sum_{w\in\mathrm{Vocab}}\exp\left(\mathbf u_w^T\mathbf v_c\right)} = \mathbf U\hat{\mathbf y},
+    \end{align*}
+    and
+    \begin{align*}
+        \mathbf u_o = \mathbf U \mathbf y
+    \end{align*}
+    Therefore, the derivative is $\mathbf U\left(\hat{\mathbf y} - \mathbf y\right)$, where $\mathbf U \in \mathbb R^{d\times|\mathrm{Vocab}|}$, 
+    and $\hat{\mathbf y}, \mathbf y \in \mathbb R^{|\mathrm{Vocab}|}$.
+
+    The derivative equals to zero when
+
+    1. $\hat{\mathbf y} = \mathbf y$ (impossible due to softmax), or
+
+    2. $\hat{\mathbf y} - \mathbf y \in \ker\left(\mathbf U\right)$ (possible since $d$ is usually much less than $|\mathrm{Vocab}|$).
+
+    Assume vector $\mathbf v_c$ is randomly initialized and $\mathbf U$ remains fixed, 
+    gradient descent updates $\mathbf v_c$ by pulling it towards the true context vector $\mathbf U\mathbf y$ and repelling it from the predicted expectation $\mathbf U\hat{\mathbf y}$.
+\end{enumerate}
+
+\end{document}
