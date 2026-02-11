@@ -18,15 +18,15 @@
 
 \fancypagestyle{plain}{
     \fancyhf{}
-    \fancyhead[L]{Assignment \#2}
+    \fancyhead[L]{Assignment 2}
     \fancyhead[R]{CS224n Natural Language Processing}
     \fancyfoot[C]{\thepage}
 }
 
 \pagestyle{plain}
 
-\title{\textbf{Assignment \#2}}
-\author{Peiyu Liu}
+\title{\textbf{Assignment 2}}
+\author{}
 \date{\empty}
 
 \begin{document}
@@ -35,18 +35,18 @@
 \section{[15 points] Understanding word2vec.}
 \begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
     \item 
-    According to notations defined in writeup:
+    According to writeup,
     $$\mathbf J_{\mathrm{naive-softmax}}(\mathbf v_c,o,\mathbf U)=-\log P(O=o|C=c)
     = -\log \hat y_o=-\sum_{w\in \mathrm{Vocab}}y_w\log\hat y_w.$$
     Note that
 
     1. scalar $\hat y_o = P(O=o|C=c)=\frac{\exp\left(\mathbf u_o^T\mathbf v_c\right)}{\sum_{w\in\mathrm{Vocab}}\exp\left(\mathbf u_w^T\mathbf v_c\right)}$, and
 
-    2. $\mathbf y$ is an one-hot vector where only $y_o=1$.
+    2. ground-truth $\mathbf y$ is an one-hot vector where only $y_o=1$.
     \qed
 
     \item 
-    Using chain rule, we obtain
+    Use the chain rule,
     \begin{align*}
         \frac{\partial \mathbf J}{\partial \mathbf v_c}&=-\frac{\partial}{\partial \mathbf v_c}\log P(O=o|C=c)\\
         &=-\frac{1}{P(O=o|C=c)}\cdot\frac{\partial P(O=o|C=c)}{\partial \mathbf v_c}\\
@@ -68,12 +68,19 @@
 
     The derivative equals to zero when
 
-    1. $\hat{\mathbf y} = \mathbf y$ (impossible due to positive nature of softmax), or
+    1. $\hat{\mathbf y} = \mathbf y$ (impossible due to the nature of softmax), or
 
     2. $\hat{\mathbf y} - \mathbf y \in \ker\left(\mathbf U\right)$ (possible since $d$ is usually much less than $|\mathrm{Vocab}|$).
 
     Assume vector $\mathbf v_c$ is randomly initialized and $\mathbf U$ remains fixed, 
-    then gradient descent updates $\mathbf v_c$ by pulling it towards the true context vector $\mathbf U\mathbf y$ and repelling it from the (false) predicted distribution $\mathbf U\hat{\mathbf y}$.
+    then gradient descent updates $\mathbf v_c$ by pulling it towards the ground-truth 
+    context vector $\mathbf U\mathbf y$ and repelling it from the (false) predicted distribution $\mathbf U\hat{\mathbf y}$:
+
+    $$\mathbf v_c := \mathbf v_c - \alpha \mathbf U(\hat{\mathbf y} - \mathbf y).$$
+
+    \item L2 normalization takes away information about magnitudes of vector.
+    \item 
+
 \end{enumerate}
 
 \end{document}
