@@ -96,7 +96,7 @@
     $$\frac{\partial \mathbf J}{\partial \mathbf u_w}=\left[\frac{\exp\left(\mathbf u_w^T\mathbf v_c\right)}
     {\sum_{w\in\mathrm{Vocab}}\exp\left(\mathbf u_w^T\mathbf v_c\right)}-1\right]\cdot \mathbf v_c=(\hat y_w-1)\mathbf v_c.$$
 
-    \item The derivation has been formulated in (d).
+    \item $$\frac{\partial \mathbf J}{\partial \mathbf U}=\mathbf v_c\left(\mathbf{\hat y}-\mathbf y\right)^T.$$
 
 \end{enumerate}
 
@@ -139,6 +139,74 @@ will be shifted once and reduced once.
 \end{figure}
 \item Coding problem, no written submission.
 \item Coding problem, no written submission.
+\item Let $h_i = \mathrm{ReLU}(z_i)$, where $z_i = \sum_{j}x_jW_{ji}$.
+Then the derivative is
+\begin{align*}
+    \frac{\partial h_i}{\partial x_j} = 
+    \begin{cases}
+    W_{ji}, &z_i > 0\\
+    0, &z_i < 0
+    \end{cases}.
+\end{align*}
+Since the ground-truth label is $c$, the partial derivative of $J(\theta)$ w.r.t.
+$l_i$ is formulated as
+\begin{align*}
+    \frac{\partial J(\theta)}{\partial l_i} &= \frac{\partial CE(\mathbf y,\mathbf{\hat y})}{\partial \hat y_c}
+    \cdot \frac{\partial \hat y_c}{\partial l_i}\\
+    &=-\frac{1}{\hat y_c}\cdot\frac{\partial \hat y_c}{\partial l_i},
+\end{align*}
+where $\hat y_c=\frac{\exp\left(l_c\right)}{\sum_{j=1}^{3}\exp\left(l_j\right)}$.
+Therefore, 
+\begin{align*}
+    \frac{\partial \hat y_c}{\partial l_i} &= \begin{cases}
+        -\frac{\exp\left(l_c+l_i\right)}{\left[\sum_{j=1}^{3}\exp\left(l_j\right)\right]^2}, &c\neq i\\
+        \frac{\exp\left(l_i\right)\left[\sum_{j=1}^{3}\exp\left(l_j\right)-\exp\left(l_i\right)\right]}{\left[\sum_{j=1}^{3}\exp\left(l_j\right)\right]^2}, &c=i
+    \end{cases}.
+\end{align*}
+Then the derivative is
+\begin{align*}
+    \frac{\partial J(\theta)}{\partial l_i} &= \begin{cases}
+        \frac{\exp\left(l_i\right)}{\sum_{j=1}^3\exp\left(l_j\right)}, &c\neq i\\
+        \frac{\exp\left(l_i\right)}{\sum_{j=1}^3\exp\left(l_j\right)} - 1, &c=i
+    \end{cases}.
+\end{align*}
+
+Best UAS on validation set: 88.57\%.
+
+Best UAS on test set: 89.13\%.
+
+\item \begin{enumerate}[label=\roman*., left=-10pt, labelsep=1em, itemsep=1em]
 \item 
+\textbf{Error type}: Verb Phrase Attachment Error
+
+\textbf{Incorrect dependency}: acquisition $\rightarrow$ citing
+
+\textbf{Correct dependency}: blocked $\rightarrow$ citing
+
+\item 
+\textbf{Error type}: Modifier Attachment Error
+
+\textbf{Incorrect dependency}: elements $\rightarrow$ most
+
+\textbf{Correct dependency}: crucial $\rightarrow$ most
+
+\item
+\textbf{Error type}: Prepositional Phrase Attachment Error
+
+\textbf{Incorrect dependency}: declined $\rightarrow$ decision
+
+\textbf{Correct dependency}: reasons $\rightarrow$ decision
+
+\item
+\textbf{Error type}: Coordination Attachment Error
+
+\textbf{Incorrect dependency}: affects $\rightarrow$ one
+
+\textbf{Correct dependency}: plants $\rightarrow$ one
+\end{enumerate}
+\item POS tags provide explicit syntactic information that 
+helps the parser disambiguate words with multiple meanings. 
+Furthermore, they allow the model to generalize to rare or out-of-vocabulary (OOV) 
+words by relying on the known grammatical behavior of the tag.
 \end{enumerate}
 \end{document}
