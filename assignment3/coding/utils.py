@@ -35,9 +35,11 @@ def pad_sents(sents, pad_token):
     sents_padded = []
 
     ### YOUR CODE HERE (~6 Lines)
-
-
-
+    lens = [len(sentence) for sentence in sents]
+    max_len = np.array(lens).max()
+    for idx, sentence in enumerate(sents):
+        padding = [pad_token] * (max_len - lens[idx])
+        sents_padded.append(sentence + padding)
     ### END YOUR CODE
 
     return sents_padded
