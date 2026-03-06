@@ -124,16 +124,16 @@ class NMT(nn.Module):
 
         enc_hiddens, dec_init_state = self.encode(source_padded, source_lengths)
         enc_masks = self.generate_sent_masks(enc_hiddens, source_lengths)
-        combined_outputs = self.decode(enc_hiddens, enc_masks, dec_init_state, target_padded)
-        P = F.log_softmax(self.target_vocab_projection(combined_outputs), dim=-1)
+        combined_outputs = self.decode(enc_hiddens, enc_masks, dec_init_state, target_padded)   # (tgt_len, b, h)
+        P = F.log_softmax(self.target_vocab_projection(combined_outputs), dim=-1)   # (tgt_len, b, |V|)
 
         # Zero out, probabilities for which we have nothing in the target text
         target_masks = (target_padded != self.vocab.tgt['<pad>']).float()
 
         # Compute log probability of generating true target words
-        target_gold_words_log_prob = torch.gather(P, index=target_padded[1:].unsqueeze(-1), dim=-1).squeeze(
-            -1) * target_masks[1:]
-        scores = target_gold_words_log_prob.sum(dim=0)
+        target_gold_words_log_prob = torch.gather(P, index=target_padded[1:].unsqueeze(-1),     # chop off <s>
+                                                  dim=-1).squeeze(-1) * target_masks[1:]    # (tgt_len, b)
+        scores = target_gold_words_log_prob.sum(dim=0)  # (b, )
         return scores
 
     def encode(self, source_padded: torch.Tensor, source_lengths: List[int]) -> Tuple[
@@ -196,8 +196,8 @@ class NMT(nn.Module):
         enc_hiddens = torch.permute(enc_hiddens, (1, 0 ,2)) # (src_len, b, 2 * h)
         last_hidden = torch.cat((last_hidden[1], last_hidden[0]), dim=1)  # (b, 2 * h)
         last_cell = torch.cat((last_cell[1], last_cell[0]), dim=1)  # (b, 2 * h)
-        init_decoder_hidden = self.h_projection(last_hidden)
-        init_decoder_cell = self.c_projection(last_cell)
+        init_decoder_hidden = self.h_projection(last_hidden)    # (b, h)
+        init_decoder_cell = self.c_projection(last_cell)    # (b, h)
         dec_init_state = (init_decoder_hidden, init_decoder_cell)
         ### END YOUR CODE
 
@@ -226,7 +226,7 @@ class NMT(nn.Module):
 
         # Initialize previous combined output vector o_{t-1} as zero
         batch_size = enc_hiddens.size(0)
-        o_prev = torch.zeros(batch_size, self.hidden_size, device=self.device)
+        o_prev = torch.zeros(batch_size, self.hidden_size, device=self.device)  # (b, h)
 
         # Initialize a list we will use to collect the combined output o_t on each step
         combined_outputs = []
@@ -266,12 +266,15 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/generated/torch.cat.html
         ###     Tensor Stacking:
         ###         https://pytorch.org/docs/stable/generated/torch.stack.html
-
-
-
-
-
-
+        enc_hiddens_proj = self.att_projection(enc_hiddens) # (b, src_len, h)
+        Y = self.model_embeddings.target(target_padded) # (tgt_len, b ,e)
+        for Y_t in torch.split(Y, 1):
+            Y_t = torch.squeeze(Y_t, dim=0) # (b, e)
+            Ybar_t = torch.cat((Y_t, o_prev), dim=-1)   # (b, e + h)
+            dec_state, o_t, _ = self.step(Ybar_t, dec_state, enc_hiddens, enc_hiddens_proj, enc_masks)
+            combined_outputs.append(o_t)
+            o_prev = o_t
+        combined_outputs = torch.stack(combined_outputs, dim=0)
         ### END YOUR CODE
 
         return combined_outputs
@@ -327,8 +330,10 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/generated/torch.unsqueeze.html
         ###     Tensor Squeeze:
         ###         https://pytorch.org/docs/stable/generated/torch.squeeze.html
-
-
+        dec_state = self.decoder(Ybar_t, dec_state)
+        dec_hidden = dec_state[0]
+        # (b, src_len, h) x (b, h, 1) -> (b, src_len, 1) -> (b, src_len)
+        e_t = torch.squeeze(torch.bmm(enc_hiddens_proj, torch.unsqueeze(dec_hidden, dim=-1)), dim=-1)
         ### END YOUR CODE
 
         # Set e_t to -inf where enc_masks has 1
@@ -361,8 +366,11 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/generated/torch.cat.html
         ###     Tanh:
         ###         https://pytorch.org/docs/stable/generated/torch.tanh.html
-
-
+        alpha_t = F.softmax(e_t, dim=-1)    # (b, src_len)
+        a_t = torch.squeeze(torch.bmm(torch.unsqueeze(alpha_t, dim=1), enc_hiddens), dim=1) # (b, 2 * h)
+        U_t = torch.cat((dec_hidden, a_t), dim=-1)  # (b, 3 * h) 
+        V_t = self.combined_output_projection(U_t)  # (b, h)
+        O_t = self.dropout(F.tanh(V_t))
         ### END YOUR CODE
 
         combined_output = O_t
@@ -380,7 +388,7 @@ class NMT(nn.Module):
         """
         enc_masks = torch.zeros(enc_hiddens.size(0), enc_hiddens.size(1), dtype=torch.float)
         for e_id, src_len in enumerate(source_lengths):
-            enc_masks[e_id, src_len:] = 1
+            enc_masks[e_id, src_len:] = 1   # avoid attending to padding tokensx
         return enc_masks.to(self.device)
 
     def beam_search(self, src_sent: List[str], beam_size: int = 5, max_decoding_time_step: int = 70) -> List[
