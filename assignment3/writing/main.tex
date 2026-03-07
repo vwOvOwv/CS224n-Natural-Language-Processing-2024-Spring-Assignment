@@ -33,7 +33,13 @@
 
 \maketitle
 \section{Neural Machine Translation with RNNs (45 points)}
-\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
-    \item 
+\begin{enumerate}[label=(g), left=0pt, labelsep=1em, itemsep=1em]
+    \item \textit{enc\_mask} marks padding tokens with 1s and other non-padding tokens 
+    with 0s. And the attention scores of tokens where \textit{enc\_mask} is 1 are set 
+    to $-\infty$. Therefore, with \textit{enc\_mask}, model does not attend to padding tokens 
+    since their attention values are 0 after softmax.
+
+    Such masks are necessary for NMT models to attend to meaningful tokens of a sentence, rather
+    than padding tokens that are manually added to support parallel processing.
 \end{enumerate}
 \end{document}
