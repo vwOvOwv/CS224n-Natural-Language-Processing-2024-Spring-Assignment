@@ -1,4 +1,5 @@
 \documentclass[11pt, a4paper, oneside]{article}
+\usepackage{xeCJK}
 \usepackage{amsmath, amsthm, amssymb, bm, color, framed, graphicx, hyperref, mathrsfs}
 \usepackage{geometry}
 \usepackage{fancyhdr}
@@ -33,15 +34,38 @@
 
 \maketitle
 \section{Neural Machine Translation with RNNs (45 points)}
-\begin{enumerate}[label=(g), left=0pt, labelsep=1em, itemsep=1em]
-    \item \textit{enc\_mask} marks padding tokens with 1s and other non-padding tokens 
+\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
+    \item[(g)] \textit{enc\_mask} marks padding tokens with 1s and other non-padding tokens 
     with 0s. And the attention scores of tokens where \textit{enc\_mask} is 1 are set 
     to $-\infty$. Therefore, with \textit{enc\_mask}, model does not attend to padding tokens 
     since their attention values are 0 after softmax.
 
     Such masks are necessary for NMT models to attend to meaningful tokens of a sentence, rather
     than padding tokens that are manually added to support parallel processing.
+    \item[(h)] Corpus BLEU: 19.915406403991692.
+    
+    \item[(i)] 
+    Pros of dot production attention: computationally effective.
+    
+    Cons of dot production attention: assumes the two vectors are in the same space (aligned).
 
-    \item Corpus BLEU: 19.915406403991692.
+    Pros of additive attention: adds non-linearity and is more expressive.
+
+    Cons of additive attention: more computational overhead.
+\end{enumerate}
+\section{Analyzing NMT Systems (25 points)}
+\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
+    \item The convolution layer after embedding combines individual token embeddings, 
+    which gives model better semantic representations of phrases consisting of multiple tokens.
+    \item \begin{enumerate}[label=\roman*., left=0pt, labelsep=1em, itemsep=1em]
+    \item The NMT model translates the phrase 贼人 into the singular form \textit{the 
+    culprit was} while the gold reference is the plural form \textit{the culprits were}. 
+    The error occurs due to morphological ambiguity in the source language (Chinese), 
+    where the noun 贼人 does not explicitly indicate grammatical number (singular vs. plural). 
+    The model likely defaults to the singular form based on its frequency in the training data, 
+    as it lacks sufficient contextual clues or explicit number markers to infer the plural sense.
+    To fix such errors, nouns in the source corpus could be pre-processed with explicit entity 
+    number tags.
+    \end{enumerate}
 \end{enumerate}
 \end{document}
