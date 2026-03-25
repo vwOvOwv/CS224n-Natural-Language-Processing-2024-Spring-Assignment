@@ -66,6 +66,19 @@
     as it lacks sufficient contextual clues or explicit number markers to infer the plural sense.
     To fix such errors, nouns in the source corpus could be pre-processed with explicit entity 
     number tags.
+    \item The model repeats \textit{resources have been exhausted} and omits 
+    \textit{no space to accommodate these people}. This error may originate from 
+    attention mechanisms. The model allocate too much attention on the second part
+    资源已经用尽. A possible fix is to change the attention mechanism during decoding.
+    \item The model translates 今天是国殇日 into \textit{today's day}, seeming to take
+    the source as a clause, and 国殇 is omitted in translation. In training data, 国殇
+    appears only once, thus it's hard for the model to learn a robust representation for
+    this word. To fix, more sentences including 国殇 should be added into the corpus.
+    \item The model ignores the meaning of 唔做 during translation. It seems that the
+    model doesn't understand the causal relationship between 唔做 and 唔错. The main reason for
+    this may be lack of Cantonese showing such causal relationship in the training corpus. A 
+    possible fix for this can be adding more Cantonese texts with more complicated logics into
+    the training data.
     \end{enumerate}
 \end{enumerate}
 \end{document}
