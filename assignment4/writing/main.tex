@@ -193,4 +193,85 @@
     within one softmax. Averaging the head outputs therefore preserves both
     values more reliably and reduces the variance of the final output.
 \end{enumerate}
+\newpage
+\section{Position Embeddings Exploration (6 points)}
+\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
+    \item
+    \begin{enumerate}[label=\roman*., left=0pt, labelsep=1em, itemsep=1em]
+        \item Since
+        $X_{\mathrm{perm}}=PX$, the query, key, and value matrices become
+        \begin{align*}
+            Q_{\mathrm{perm}}
+            &=X_{\mathrm{perm}}W_Q=PXW_Q=PQ,\\
+            K_{\mathrm{perm}}&=PK,\\
+            V_{\mathrm{perm}}&=PV.
+        \end{align*}
+        Define $A=QK^\top/\sqrt d$. Then
+        \begin{align*}
+            H_{\mathrm{perm}}
+            &=\operatorname{softmax}\!\left(
+                \frac{Q_{\mathrm{perm}}K_{\mathrm{perm}}^\top}{\sqrt d}
+              \right)V_{\mathrm{perm}}\\
+            &=\operatorname{softmax}(PAP^\top)PV\\
+            &=P\operatorname{softmax}(A)P^\top PV\\
+            &=P\operatorname{softmax}(A)V
+             =PH,
+        \end{align*}
+        where we used $P^\top P=I_T$. A permutation leaves the all-ones
+        vector unchanged, so $P\mathbf1=\mathbf1$. Consequently,
+        \begin{align*}
+            Z_{\mathrm{perm}}
+            &=\operatorname{ReLU}
+              (H_{\mathrm{perm}}W_1+\mathbf1b_1)W_2+\mathbf1b_2\\
+            &=\operatorname{ReLU}
+              \bigl(PHW_1+P\mathbf1b_1\bigr)W_2+P\mathbf1b_2\\
+            &=\operatorname{ReLU}
+              \bigl(P(HW_1+\mathbf1b_1)\bigr)W_2+P\mathbf1b_2\\
+            &=P\operatorname{ReLU}
+              (HW_1+\mathbf1b_1)W_2+P\mathbf1b_2\\
+            &=P\left[
+                \operatorname{ReLU}(HW_1+\mathbf1b_1)W_2+\mathbf1b_2
+              \right]
+             =PZ.
+        \end{align*}
+        Therefore, permuting the input rows by $P$ permutes the output rows by
+        the same matrix $P$.
+
+        \item Although permutation equivariance is useful for unordered set
+        inputs, it is problematic for text because word order carries
+        syntactic and semantic information. Without positional information,
+        permuting the input tokens merely permutes the output representations
+        in the same way; after matching each output with its corresponding
+        token, the representations are otherwise unchanged. Therefore, the
+        Transformer cannot model order-dependent relationships, such as which
+        noun is the subject and which is the object.
+    \end{enumerate}
+
+    \item
+    \begin{enumerate}[label=\roman*., left=0pt, labelsep=1em, itemsep=1em]
+        \item Yes. After permuting the tokens, the position-encoded input is
+        \[
+            X_{\mathrm{pos,perm}}=PX+\Phi,
+        \]
+        because $\Phi$ remains attached to the fixed sequence positions. In
+        general,
+        \[
+            PX+\Phi\neq P(X+\Phi)=PX+P\Phi.
+        \]
+        Thus, the permutation-equivariance result from part (a) no longer
+        applies. A token moved to a new position receives a different position
+        embedding, allowing the Transformer to model word order.
+
+        \item No. Suppose two integer positions $t$ and $t'$ had identical
+        position embeddings. Taking $i=0$ gives
+        \[
+            \sin t=\sin t',
+            \qquad
+            \cos t=\cos t'.
+        \]
+        Hence $t-t'=2\pi m$ for some integer $m$. Since $t-t'$ is an integer,
+        this is possible only when $m=0$, so $t=t'$. Therefore, two distinct
+        positions cannot have identical position embeddings.
+    \end{enumerate}
+\end{enumerate}
 \end{document}
