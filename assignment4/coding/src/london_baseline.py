@@ -12,7 +12,15 @@ def main():
 
     # Compute accuracy in the range [0.0, 100.0]
     ### YOUR CODE HERE ###
-    pass
+    from utils import evaluate_places
+    file_path = "birth_dev.tsv"
+
+    with open(file_path, encoding='utf-8') as fin:
+        lines = [x.strip().split('\t') for x in fin]
+    num_lines = len(lines)
+    total, correct = evaluate_places("birth_dev.tsv", ["London"] * num_lines)
+    print(f'Correct: {correct} out of {total}: {correct/total*100}%')
+    accuracy = correct / total * 100
     ### END YOUR CODE ###
 
     return accuracy
