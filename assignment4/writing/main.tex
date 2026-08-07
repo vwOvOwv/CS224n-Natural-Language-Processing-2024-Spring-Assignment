@@ -279,5 +279,121 @@
     \item[d] Finetune w/o pretraining: Correct: 11.0 out of 500.0: 2.1999999999999997\%.
     London baseline: Correct: 25.0 out of 500.0: 5.0\%.
     \item[f] Finetune w/ pretraining: Correct: 128.0 out of 500.0: 25.6\%
+    \item[g]
+    \begin{enumerate}[label=\roman*., left=0pt, labelsep=1em, itemsep=1em]
+        \item
+        For $k=1,\ldots,d/2$, represent the $k$-th pair of features as the
+        complex number
+        \[
+            z_{t,k}=x_t^{(2k-1)}+\mathrm{i}x_t^{(2k)},
+            \qquad
+            \theta_k=10000^{-2(k-1)/d}.
+        \]
+        The $k$-th element of the element-wise product in Equation 4 is
+        \[
+            u_{t,k}
+            =\bigl(\cos(t\theta_k)+\mathrm{i}\sin(t\theta_k)\bigr)
+             \bigl(x_t^{(2k-1)}+\mathrm{i}x_t^{(2k)}\bigr).
+        \]
+        Expanding this product and using $\mathrm{i}^2=-1$ gives
+        \begin{align*}
+            u_{t,k}
+            &=x_t^{(2k-1)}\cos(t\theta_k)
+              +\mathrm{i}x_t^{(2k-1)}\sin(t\theta_k)\\
+            &\quad+\mathrm{i}x_t^{(2k)}\cos(t\theta_k)
+              -x_t^{(2k)}\sin(t\theta_k)\\
+            &=\bigl[x_t^{(2k-1)}\cos(t\theta_k)
+              -x_t^{(2k)}\sin(t\theta_k)\bigr]\\
+            &\quad+\mathrm{i}\bigl[x_t^{(2k-1)}\sin(t\theta_k)
+              +x_t^{(2k)}\cos(t\theta_k)\bigr].
+        \end{align*}
+        Therefore, the real and imaginary parts of $u_{t,k}$ satisfy
+        \[
+            \begin{bmatrix}
+                \operatorname{Re}(u_{t,k})\\
+                \operatorname{Im}(u_{t,k})
+            \end{bmatrix}
+            =
+            \begin{bmatrix}
+                \cos(t\theta_k)&-\sin(t\theta_k)\\
+                \sin(t\theta_k)&\cos(t\theta_k)
+            \end{bmatrix}
+            \begin{bmatrix}
+                x_t^{(2k-1)}\\
+                x_t^{(2k)}
+            \end{bmatrix}.
+        \]
+        This is exactly the $k$-th $2\times2$ rotation block in Equation 3.
+        Stacking the real and imaginary parts for all $k$ in their original
+        order gives
+        \[
+            \operatorname{RoPE}(x_t,t)
+            =
+            \begin{bmatrix}
+                \operatorname{Re}(u_{t,1})\\
+                \operatorname{Im}(u_{t,1})\\
+                \vdots\\
+                \operatorname{Re}(u_{t,d/2})\\
+                \operatorname{Im}(u_{t,d/2})
+            \end{bmatrix},
+        \]
+        which is the vector produced by the block-diagonal matrix in
+        Equation 3. Thus, Equation 4 computes all two-dimensional rotations
+        simultaneously by element-wise complex multiplication; in code, this
+        requires reshaping the real vector into pairs, converting the pairs to
+        complex numbers, applying the multiplication, converting back to real
+        numbers, and flattening the pairs.
+
+        \item
+        For a two-dimensional vector represented by a complex number, the
+        RoPE operation is
+        \[
+            \operatorname{RoPE}(z,t)=e^{\mathrm{i}t\theta}z,
+        \]
+        and the corresponding real dot product is
+        \[
+            \langle z_1,z_2\rangle
+            =\operatorname{Re}\!\left(z_1\overline{z_2}\right),
+        \]
+        where the bar denotes complex conjugation. Therefore,
+        \begin{align*}
+            \left\langle \operatorname{RoPE}(z_1,t_1),
+            \operatorname{RoPE}(z_2,t_2)\right\rangle
+            &=\operatorname{Re}\!\left[
+                \left(e^{\mathrm{i}t_1\theta}z_1\right)
+                \overline{\left(e^{\mathrm{i}t_2\theta}z_2\right)}
+              \right]\\
+            &=\operatorname{Re}\!\left[
+                e^{\mathrm{i}t_1\theta}z_1
+                e^{-\mathrm{i}t_2\theta}\overline{z_2}
+              \right]\\
+            &=\operatorname{Re}\!\left[
+                e^{\mathrm{i}(t_1-t_2)\theta}z_1\overline{z_2}
+              \right].
+        \end{align*}
+        On the other hand, since
+        $\operatorname{RoPE}(z_2,0)=e^{0}z_2=z_2$, we have
+        \begin{align*}
+            \left\langle \operatorname{RoPE}(z_1,t_1-t_2),
+            \operatorname{RoPE}(z_2,0)\right\rangle
+            &=\operatorname{Re}\!\left[
+                \left(e^{\mathrm{i}(t_1-t_2)\theta}z_1\right)
+                \overline{z_2}
+              \right]\\
+            &=\operatorname{Re}\!\left[
+                e^{\mathrm{i}(t_1-t_2)\theta}z_1\overline{z_2}
+              \right].
+        \end{align*}
+        The two expressions are identical. Hence,
+        \[
+            \left\langle \operatorname{RoPE}(z_1,t_1),
+            \operatorname{RoPE}(z_2,t_2)\right\rangle
+            =
+            \left\langle \operatorname{RoPE}(z_1,t_1-t_2),
+            \operatorname{RoPE}(z_2,0)\right\rangle,
+        \]
+        showing that the dot product depends on the positions only through
+        their relative displacement $t_1-t_2$.
+    \end{enumerate}
 \end{enumerate}
 \end{document}
