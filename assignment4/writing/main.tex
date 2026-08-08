@@ -395,6 +395,37 @@
         \]
         showing that the dot product depends on the positions only through
         their relative displacement $t_1-t_2$.
+        \item Correct: 154.0 out of 500.0: 30.8\%.
     \end{enumerate}
+\end{enumerate}
+\section{Considerations in pretrained knowledge (5 points)}
+\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
+    \item Pretraining on Wikipedia exposes the model to associations between
+    people's names and their birthplaces, together with broader world
+    knowledge. Fine-tuning then teaches the model to use these associations in
+    the birthplace-prediction format. Because the fine-tuning dataset is small,
+    a model trained from scratch cannot learn a sufficiently general mapping
+    from names to places and therefore performs poorly on unseen names.
+
+    \item
+    \begin{enumerate}[label=\arabic*., left=0pt, labelsep=1em, itemsep=1em]
+        \item The model may produce a plausible but incorrect answer that a
+        user cannot distinguish from a retrieved fact, causing the user to act
+        on false information. For example, a medical assistant might invent a
+        diagnosis or dosage, leading to an unsafe treatment decision.
+        \item The absence of reliable provenance or uncertainty estimates makes
+        errors difficult to audit, correct, and assign responsibility for. For
+        example, a legal assistant might cite an invented court decision, while
+        giving the user no source that could be checked.
+    \end{enumerate}
+
+    \item For a person absent from both pretraining and fine-tuning, the model
+    may rely on surface cues in the name, such as its spelling, formatting, or
+    resemblance to names associated with particular regions, and generate the
+    most likely birthplace. This is a heuristic guess rather than retrieved
+    knowledge. Such behavior can reinforce stereotypes and lead to
+    discriminatory misclassification; for example, an automated screening
+    system might infer a person's nationality or birthplace from their surname
+    and use that inference in an employment or immigration decision.
 \end{enumerate}
 \end{document}
